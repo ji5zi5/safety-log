@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>세이프티-로그</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #5E72E4;
+            --secondary-color: #F7FAFC;
+            --font-color: #32325d;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --danger-color: #F5365C;
+            --success-color: #2dce89;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 40px 20px; /* 프레임 주변 여백 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background-color: var(--secondary-color);
+            border-radius: 44px;
+            border: 8px solid #111;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 28px;
+            background: #111;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 10;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8965E0 100%);
+            color: white;
+            padding: 45px 20px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 { margin: 0; font-size: 1.6em; font-weight: 700; }
+        .header p { margin: 5px 0 0; font-size: 0.9em; opacity: 0.8; }
+
+        .user-profile {
+            background-color: #ffffff;
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .user-profile .name { font-size: 1.2em; font-weight: 700; color: var(--font-color); }
+        .user-profile .level {
+            font-size: 0.9em;
+            color: var(--primary-color);
+            background-color: rgba(94, 114, 228, 0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .accordion-item {
+            background-color: #ffffff;
+            border-radius: 15px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accordion-header .title-group {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 0; /* flex-grow가 작동하도록 */
+        }
+
+        .accordion-header .action-icon {
+            font-size: 1.4em;
+            color: var(--primary-color);
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .accordion-header .accordion-title {
+             font-size: 1.1em;
+            font-weight: 600;
+            color: var(--font-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .accordion-header .toggle-arrow {
+            font-size: 1.4em;
+            transition: transform 0.3s ease;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            padding: 0 20px;
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .report-types, .log-list, .quiz-content { padding: 20px 0; }
+        .report-type-btn {
+            display: flex; align-items: center; width: 100%; box-sizing: border-box;
+            padding: 15px; margin-bottom: 10px; border: 1px solid var(--border-color);
+            border-radius: 10px; background-color: var(--secondary-color); font-size: 1em;
+            font-weight: 500; text-align: left; cursor: pointer; transition: all 0.2s;
+        }
+        .report-type-btn:hover { background-color: #fff; border-color: var(--primary-color); transform: translateY(-2px); }
+        .report-type-btn .icon { font-size: 1.5em; margin-right: 15px; }
+
+        .log-item { border-bottom: 1px solid var(--border-color); padding: 18px 0; }
+        .log-item:last-child { border-bottom: none; }
+        .log-content { font-size: 1em; color: #525f7f; margin-bottom: 10px; }
+        .log-meta { font-size: 0.8em; color: #8898aa; margin-bottom: 12px; }
+        .log-actions { display: flex; align-items: center; }
+        .log-actions .view-photo {
+            background-color: #fff; border: 1px solid var(--border-color); color: #525f7f;
+            padding: 6px 12px; border-radius: 8px; font-size: 0.8em; margin-right: 10px; cursor: pointer;
+        }
+        
+        .vote-btn { background: none; border: none; font-size: 1.3em; cursor: pointer; margin-right: 5px; color: #adb5bd; transition: all 0.2s; }
+        .vote-count { font-size: 0.9em; font-weight: 600; color: var(--font-color); margin-right: 15px; min-width: 20px; }
+        .vote-btn.up:hover, .vote-btn.up.active { color: var(--success-color); transform: scale(1.2); }
+        .vote-btn.down:hover, .vote-btn.down.active { color: var(--danger-color); transform: scale(1.2); }
+        .voted .vote-btn {
+            pointer-events: none;
+        }
+        
+        .fake-log .log-content {
+            color: #adb5bd;
+            text-decoration: line-through;
+            text-decoration-color: var(--danger-color);
+            text-decoration-thickness: 2px;
+        }
+        .fake-log .log-meta, .fake-log .vote-btn, .fake-log .vote-count, .fake-log .view-photo {
+            opacity: 0.6;
+        }
+
+        .quiz-option {
+            display: block; width: 100%; box-sizing: border-box; padding: 15px;
+            margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 10px;
+            background-color: white; font-size: 1em; text-align: left; cursor: pointer; transition: all 0.2s;
+        }
+        .quiz-option.answered {
+            pointer-events: none;
+        }
+        .quiz-option.correct { border-color: var(--success-color); background-color: rgba(45, 206, 137, 0.1); color: var(--success-color); font-weight: 700; }
+        .quiz-option.incorrect { border-color: var(--danger-color); background-color: rgba(245, 54, 92, 0.1); color: var(--danger-color); font-weight: 700; }
+        
+        #quiz-explanation {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            margin-top: 0;
+            padding: 0 15px;
+            background-color: #f0f8ff;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        #quiz-explanation.show {
+            max-height: 200px;
+            margin-top: 15px;
+            padding: 15px;
+            border-color: #add8e6;
+        }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background-color: white; padding: 20px; border-radius: 15px;
+            max-width: 90%; max-height: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-content img { width: 100%; height: auto; display: block; border-radius: 8px; }
+        .close-btn {
+            position: absolute; top: -15px; right: -15px; width: 35px; height: 35px;
+            background-color: white; color: var(--primary-color); border-radius: 50%;
+            border: 2px solid var(--primary-color); font-size: 20px; font-weight: 700;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="header">
+            <h1><i class="ri-shield-check-line"></i> 세이프티-로그</h1>
+            <p>학교 전체</p>
+        </div>
+        <div class="user-profile">
+            <span class="name">이학범 님</span>
+            <span class="level">LV.2 안전 새싹 🌱</span>
+        </div>
+        <div class="main-content">
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="title-group">
+                        <i class="ri-add-circle-line action-icon"></i>
+                        <span class="accordion-title">위험/경험 기록하기</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line toggle-arrow"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="report-types">
+                        <button class="report-type-btn"><span class="icon">🚨</span> 사고 발생</button>
+                        <button class="report-type-btn"><span class="icon">😥</span> 아차 사고 공유</button>
+                        <button class="report-type-btn"><span class="icon">⚠️</span> 위험 요소 제보</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                     <div class="title-group">
+                        <i class="ri-team-line action-icon"></i>
+                        <span class="accordion-title">다른 친구들의 로그 & 공감하기</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line toggle-arrow"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="log-list">
+                        <div class="log-item">
+                            <div class="log-content">"계단 모서리 쇠가 튀어나와 있어요!"</div>
+                            <div class="log-meta">중앙 계단 - 3학년 OOO (3시간 전)</div>
+                            <div class="log-actions">
+                                <button class="view-photo" onclick="showPhotoModal('https://cdn.kado.net/news/thumbnail/201508/745647_282226_1931_v150.jpg')">사진 보기</button>
+                                <div class="vote-container">
+                                    <button class="vote-btn up" onclick="handleVote(this, 'up')"><i class="ri-thumb-up-fill"></i></button>
+                                    <span class="vote-count">25</span>
+                                    <button class="vote-btn down" onclick="handleVote(this, 'down')"><i class="ri-thumb-down-fill"></i></button>
+                                    <span class="vote-count">1</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-content">"방금 이 모퉁이에서 친구랑 뛰다가 부딪힐 뻔했어요. 조심해야 할 듯"</div>
+                            <div class="log-meta">본관 2층 복도 - 1학년 OOO (1일 전)</div>
+                            <div class="log-actions">
+                                <button class="view-photo" onclick="showPhotoModal('https://mblogthumb-phinf.pstatic.net/MjAyMjAyMjRfMjYy/MDAxNjQ1Njk0NDMzMzUw.JWlQCQCPSkSlo_PkrRzuegZxnDUEZlGpiS5kjmPxCFEg.yoD8vy5P-A8SPebTN_4z9BXanJyDsbZF2GhGHFPOqVgg.JPEG.lbj8102/20211208%EF%BC%BF200443.jpg?type=w800')">사진 보기</button>
+                                <div class="vote-container">
+                                    <button class="vote-btn up" onclick="handleVote(this, 'up')"><i class="ri-thumb-up-fill"></i></button>
+                                    <span class="vote-count">18</span>
+                                    <button class="vote-btn down" onclick="handleVote(this, 'down')"><i class="ri-thumb-down-fill"></i></button>
+                                    <span class="vote-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="log-item fake-log">
+                            <div class="log-content">"여기서 외계인 봤음ㅋㅋ"</div>
+                            <div class="log-meta">운동장 벤치 - 2학년 OOO (2일 전)</div>
+                            <div class="log-actions">
+                                <button class="view-photo" onclick="showPhotoModal('https://newsimg.sedaily.com/2017/04/26/1OESP3LU8V_1.jpg')">사진 보기</button>
+                                <div class="vote-container">
+                                    <button class="vote-btn up" onclick="handleVote(this, 'up')"><i class="ri-thumb-up-fill"></i></button>
+                                    <span class="vote-count">0</span>
+                                    <button class="vote-btn down" onclick="handleVote(this, 'down')"><i class="ri-thumb-down-fill"></i></button>
+                                    <span class="vote-count">32</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                     <div class="title-group">
+                        <i class="ri-question-line action-icon"></i>
+                        <span class="accordion-title">현장 학습 퀴즈 풀기 (+50점)</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line toggle-arrow"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="quiz-content">
+                        <p>Q. 데이터 분석 결과, 축구 중 가장 많이 발생하는 부상 부위는 어디일까요?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="checkAnswer(this, false)">① 머리</button>
+                            <button class="quiz-option" id="correct-answer" onclick="checkAnswer(this, true)">② 발목</button>
+                            <button class="quiz-option" onclick="checkAnswer(this, false)">③ 허리</button>
+                        </div>
+                        <div id="quiz-explanation">
+                            <p id="explanation-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="photoModal" class="modal-overlay" onclick="closePhotoModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closePhotoModal()">×</span>
+            <img id="modalImage" src="" alt="신고 사진">
+        </div>
+    </div>
+
+    <script>
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const arrowIcon = header.querySelector('.toggle-arrow');
+            const isActive = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+            document.querySelectorAll('.accordion-content').forEach(item => {
+                if (item !== content) {
+                    item.style.maxHeight = null;
+                    item.previousElementSibling.querySelector('.toggle-arrow').classList.remove('ri-arrow-up-s-line');
+                    item.previousElementSibling.querySelector('.toggle-arrow').classList.add('ri-arrow-down-s-line');
+                }
+            });
+            
+            if (!isActive) {
+                content.style.maxHeight = content.scrollHeight + "px";
+                arrowIcon.classList.remove('ri-arrow-down-s-line');
+                arrowIcon.classList.add('ri-arrow-up-s-line');
+            } else {
+                content.style.maxHeight = null;
+                arrowIcon.classList.remove('ri-arrow-up-s-line');
+                arrowIcon.classList.add('ri-arrow-down-s-line');
+            }
+        }
+        
+        const modal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+
+        function showPhotoModal(imageUrl) {
+            modalImage.src = imageUrl;
+            modal.style.display = 'flex';
+        }
+
+        function closePhotoModal() {
+            modal.style.display = 'none';
+        }
+
+        function handleVote(button, direction) {
+            const container = button.closest('.vote-container');
+            if (container.classList.contains('voted')) return;
+
+            const countSpan = (direction === 'up') ? container.querySelector('.up + .vote-count') : container.querySelector('.down + .vote-count');
+            let currentCount = parseInt(countSpan.textContent);
+            countSpan.textContent = currentCount + 1;
+            
+            button.classList.add('active');
+            container.classList.add('voted');
+        }
+
+        function checkAnswer(selectedButton, isCorrect) {
+            const optionsContainer = selectedButton.parentElement;
+            const options = optionsContainer.querySelectorAll('.quiz-option');
+            const explanationDiv = optionsContainer.nextElementSibling;
+            const explanationText = explanationDiv.querySelector('#explanation-text');
+            
+            options.forEach(option => {
+                option.classList.add('answered');
+                if (option.id === 'correct-answer') {
+                    option.classList.add('correct');
+                }
+            });
+
+            if (isCorrect) {
+                explanationText.innerHTML = "<strong>정답!</strong> 데이터 분석 결과, 축구 활동 중에는 점프 후 착지나 급격한 방향 전환으로 인해 **발목 부상**이 가장 빈번하게 발생하는 것으로 나타났습니다. 항상 준비 운동을 철저히 하세요.";
+            } else {
+                selectedButton.classList.add('incorrect');
+                explanationText.innerHTML = "<strong>오답입니다.</strong> 정답은 '② 발목'입니다. 축구 중에는 발목 부상 위험이 가장 높으니, 다음에는 꼭 기억해주세요!";
+            }
+            
+            explanationDiv.classList.add('show');
+            
+            const accordionContent = explanationDiv.closest('.accordion-content');
+            setTimeout(() => {
+                 const newHeight = accordionContent.scrollHeight + explanationDiv.scrollHeight;
+                 accordionContent.style.maxHeight = newHeight + "px";
+            }, 10);
+        }
+    </script>
+</body>
+</html>
